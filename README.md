@@ -5,11 +5,11 @@
 
 **GitGrade** is an intelligent repository analysis tool designed to evaluate the **"Engineering Maturity"** of GitHub projects. It goes beyond simple code volume metrics, using an **SDET-focused scoring engine** and **Google's Gemini AI** to provide actionable feedback, a detailed score breakdown, and a personalized roadmap for improvement.
 
-### 📺 [Click Here to Watch the Project Demo Video](assets/Video/gitgrade-hackathon-video.mp4)
+### 📺 [Click Here to Watch the Project Demo Video](assests/Video/gitgrade-hackathon-video.mp4)
 
-![GitGrade Dashboard](assets/screenshots/gitgradeDashboard.png)
+![GitGrade Dashboard](assests/screenshots/gitgradeDashboard.png)
 
-> *Note: If the image above doesn't load, please ensure `gitgradeDashboard.png` is inside the `assets/screenshots/` folder.*
+> *Note: If the image above doesn't load, please ensure `gitgradeDashboard.png` is inside the `assests/screenshots/` folder.*
 
 ## 🌟 Why GitGrade? (The Case Study)
 
@@ -20,7 +20,7 @@ To prove it, we "dog-fooded" the tool on this very repository:
 2.  **The Fix:** We followed GitGrade's own AI Roadmap—adding a `tests/` suite, GitHub Actions workflow, and proper metadata.
 3.  **Final Scan:** Scored **80/100 (Silver)**. 
 
-GitGrade doesn't just grade you, it teaches you how to be a better engineer.
+GitGrade doesn't just grade you; it teaches you how to be a better engineer.
 
 ## ✨ Key Features
 
