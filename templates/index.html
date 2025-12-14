@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitGrade: The Repository Mirror</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid #334155;
+            color: var(--text);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid #334155;
+        }
+
+        .score-card {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 8px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .badges {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            width: 100%;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            width: 100%;
+            max-width: 200px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .summary-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .roadmap-list {
+            list-style: none;
+        }
+
+        .roadmap-list li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .roadmap-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #334155;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-msg {
+            color: var(--danger);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>GitGrade</h1>
+            <p class="subtitle">The Repository Mirror</p>
+        </header>
+
+        <div class="input-group">
+            <input type="text" id="repoUrl" placeholder="https://github.com/username/repository" autocomplete="off">
+            <button id="analyzeBtn">Analyze</button>
+        </div>
+        <div id="errorMsg" class="error-msg"></div>
+
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p>Analyzing Codebase...</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="card score-card">
+                <div class="score-circle" id="scoreValue">--</div>
+                <div class="score-label">Quality Score</div>
+                <div class="badges">
+                    <span class="badge" id="levelBadge">Beginner</span>
+                    <span class="badge" id="medalBadge">Bronze</span>
+                </div>
+            </div>
+
+            <div class="card summary-card">
+                <h3>Summary</h3>
+                <p class="summary-text" id="summaryText">...</p>
+            </div>
+
+            <div class="card roadmap-card">
+                <h3>Your Personalized Roadmap</h3>
+                <ul class="roadmap-list" id="roadmapList">
+                    <!-- Items will be injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const repoInput = document.getElementById('repoUrl');
+        const loader = document.getElementById('loader');
+        const results = document.getElementById('results');
+        const errorMsg = document.getElementById('errorMsg');
+
+        const scoreValue = document.getElementById('scoreValue');
+        const summaryText = document.getElementById('summaryText');
+        const roadmapList = document.getElementById('roadmapList');
+        const levelBadge = document.getElementById('levelBadge');
+        const medalBadge = document.getElementById('medalBadge');
+
+        analyzeBtn.addEventListener('click', async () => {
+            const url = repoInput.value.trim();
+
+            // Basic client-side validation
+            if (!url.includes('github.com')) {
+                showError('Please enter a valid GitHub repository URL.');
+                return;
+            }
+
+            // Reset UI
+            showError('');
+            results.style.display = 'none';
+            loader.style.display = 'block';
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to analyze repository');
+                }
+
+                displayResults(data);
+
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loader.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            // Update Score
+            scoreValue.textContent = data.score;
+
+            // Color coding
+            let color = 'var(--danger)';
+            if (data.score >= 80) color = 'var(--success)';
+            else if (data.score >= 50) color = 'var(--warning)';
+
+            scoreValue.style.borderColor = color;
+            scoreValue.style.color = color;
+
+            // Update Badges
+            levelBadge.textContent = data.level;
+            medalBadge.textContent = data.medal + " Medal";
+
+            // Badge Colors
+            levelBadge.style.background = 'rgba(255,255,255,0.1)';
+            if (data.medal === 'Gold') medalBadge.style.background = '#fbbf24'; // Amber-400
+            else if (data.medal === 'Silver') medalBadge.style.background = '#94a3b8'; // Slate-400
+            else medalBadge.style.background = '#b45309'; // Amber-700 (Bronze-ish)
+
+            medalBadge.style.color = data.medal === 'Silver' ? '#0f172a' : '#fff';
+
+            // Update Summary
+            summaryText.textContent = data.summary;
+
+            // Update Roadmap
+            roadmapList.innerHTML = '';
+            if (Array.isArray(data.roadmap)) {
+                data.roadmap.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    roadmapList.appendChild(li);
+                });
+            } else {
+                // Handle case where roadmap might be a string (fallback)
+                const li = document.createElement('li');
+                li.textContent = String(data.roadmap);
+                roadmapList.appendChild(li);
+            }
+
+            results.style.display = 'grid';
+        }
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = msg ? 'block' : 'none';
+        }
+    </script>
+</body>
+
+</html>
