@@ -226,6 +226,41 @@
             font-size: 0.9rem;
             display: none;
         }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .breakdown-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .breakdown-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .breakdown-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .icon-success {
+            color: var(--success);
+        }
+
+        .icon-warning {
+            color: var(--warning);
+        }
     </style>
 </head>
 
@@ -258,6 +293,13 @@
                 </div>
             </div>
 
+            <div class="card breakdown-card">
+                <h3>Score Breakdown</h3>
+                <div class="breakdown-grid" id="breakdownGrid">
+                    <!-- Items injected here -->
+                </div>
+            </div>
+
             <div class="card summary-card">
                 <h3>Summary</h3>
                 <p class="summary-text" id="summaryText">...</p>
@@ -284,6 +326,7 @@
         const roadmapList = document.getElementById('roadmapList');
         const levelBadge = document.getElementById('levelBadge');
         const medalBadge = document.getElementById('medalBadge');
+        const breakdownGrid = document.getElementById('breakdownGrid');
 
         analyzeBtn.addEventListener('click', async () => {
             const url = repoInput.value.trim();
@@ -348,6 +391,26 @@
             else medalBadge.style.background = '#b45309'; // Amber-700 (Bronze-ish)
 
             medalBadge.style.color = data.medal === 'Silver' ? '#0f172a' : '#fff';
+
+            // Update Breakdown
+            breakdownGrid.innerHTML = '';
+            if (data.breakdown) {
+                Object.values(data.breakdown).forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'breakdown-item';
+
+                    const isFull = item.score === item.max;
+                    const icon = isFull ? '✅' : (item.score > 0 ? '⚠️' : '❌');
+
+                    div.innerHTML = `
+                        <span class="breakdown-label">${item.label}</span>
+                        <div class="breakdown-value">
+                            ${icon} ${item.score}/${item.max}
+                        </div>
+                    `;
+                    breakdownGrid.appendChild(div);
+                });
+            }
 
             // Update Summary
             summaryText.textContent = data.summary;
