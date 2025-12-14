@@ -8,8 +8,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# OpenAI API Key (Optional)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Gemini API Key loaded in generate_ai_feedback function
 
 def get_repo_details(repo_url):
     """
@@ -144,10 +143,14 @@ def generate_ai_feedback(score, metrics):
     
     level, medal = get_level_and_medal(score)
 
-    if OPENAI_API_KEY:
+    # Gemini API Key (Optional)
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+    if GEMINI_API_KEY:
         try:
-            from openai import OpenAI
-            client = OpenAI(api_key=OPENAI_API_KEY)
+            import google.generativeai as genai
+            genai.configure(api_key=GEMINI_API_KEY)
+            model = genai.GenerativeModel('gemini-flash-latest')
             
             prompt = f"""
             You are an AI Coding Mentor. Analyze this GitHub repository for a student hacker.
@@ -161,17 +164,17 @@ def generate_ai_feedback(score, metrics):
             
             Provide a JSON response with:
             1. "summary": A 1-sentence evaluation of the code quality, encouraging but honest.
-            2. "roadmap": A list of 3-5 specific, actionable steps to improve the project. Focus on engineering best practices (CI/CD, Tests, Documentation, Git flow).
+            2. "roadmap": A list of strings, where each string is a specific, actionable step to improve the project. Focus on engineering best practices (CI/CD, Tests, Documentation, Git flow).
+            
+            Ensure the response is valid JSON.
             """
             
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                response_format={ "type": "json_object" }
-            )
+            response = model.generate_content(prompt)
             
             import json
-            content = json.loads(response.choices[0].message.content)
+            # Clean up potential markdown code blocks in response
+            content_str = response.text.replace('```json', '').replace('```', '').strip()
+            content = json.loads(content_str)
             return content
             
         except Exception as e:
@@ -233,4 +236,5 @@ def analyze():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, port=port)

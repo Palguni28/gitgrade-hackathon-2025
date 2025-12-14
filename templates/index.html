@@ -357,7 +357,11 @@
             if (Array.isArray(data.roadmap)) {
                 data.roadmap.forEach(item => {
                     const li = document.createElement('li');
-                    li.textContent = item;
+                    if (typeof item === 'object' && item !== null) {
+                        li.textContent = item.step || item.text || item.description || JSON.stringify(item);
+                    } else {
+                        li.textContent = item;
+                    }
                     roadmapList.appendChild(li);
                 });
             } else {
